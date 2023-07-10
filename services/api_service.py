@@ -30,14 +30,11 @@ class SessionService:
 
     def upload_cv(self, organization_id, file_name, file):
         headers = self.headers.copy()
-        t = mimetypes.guess_type(file_name)
-        m = MultipartEncoder({'file': (file_name, file.read(), t[0])})
-        headers['Content-Type'] = m.content_type
+        file_type = mimetypes.guess_type(file_name)
+        data = MultipartEncoder({'file': (file_name, file.read(), file_type[0])})
+        headers['Content-Type'] = data.content_type
         response = requests.post(f'{self.api_server}/accounts/{organization_id}/upload',
-                                 headers=headers, data=m)
-        print(response.text)
-        print(response.headers)
-        print(response)
+                                 headers=headers, data=data)
         return response.json()
 
     def post_applicant(self, organization_id, vacancy_id, first_name, last_name,
@@ -49,6 +46,14 @@ class SessionService:
         }
         if not (middle_name is None):
             data['middle_name'] = middle_name
+        if not (cv_id is None):
+            data['externals'] = [
+                {
+                    'auth_type': 'NATIVE',
+                    'files': [int(cv_id)]
+                }
+            ]
+
         response = requests.post(f'{self.api_server}/accounts/{organization_id}/applicants',
                                  headers=self.headers, json=data)
         applicant_id = response.json()['id']
@@ -57,10 +62,6 @@ class SessionService:
             'status': int(status_id),
             'comment': comment
         }
-
-        if not (cv_id is None):
-            data['files'] = [int(cv_id)]
-
         requests.post(f'{self.api_server}/accounts/{organization_id}/applicants/{applicant_id}/vacancy',
                       headers=self.headers, json=data)
 

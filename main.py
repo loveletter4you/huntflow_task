@@ -39,6 +39,7 @@ def main():
             file.close()
         else:
             cv_id = None
+
         session_service.post_applicant(organization_id, vacancy['id'], first_name, last_name, middle_name,
                                        applicant['Комментарий'], status['id'], applicant['Ожидания по ЗП'], cv_id)
 
